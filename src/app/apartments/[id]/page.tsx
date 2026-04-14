@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { MapPin, Building2, House, ArrowLeft } from "lucide-react";
+import { MapPin, Building2, House, ArrowLeft, Users } from "lucide-react";
 
 interface ApartmentDetailPageProps {
   params: Promise<{
@@ -10,6 +10,25 @@ interface ApartmentDetailPageProps {
 
 export default async function ApartmentDetailPage({ params }: ApartmentDetailPageProps) {
   const { id } = await params;
+
+  const rooms = [
+    {
+      id: "1",
+      name: "Room 101",
+      type: "Studio",
+      price: 4000,
+      available: 2,
+      description: "Cozy studio unit with private bathroom",
+    },
+    {
+      id: "2",
+      name: "Room 102",
+      type: "1-Bedroom",
+      price: 5500,
+      available: 0,
+      description: "Spacious 1-bedroom with kitchen area",
+    },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -36,7 +55,7 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPag
             </Button>
           </Link>
 
-          <div className="border rounded-xl overflow-hidden">
+          <div className="border rounded-xl overflow-hidden mb-8">
             <div className="h-64 bg-secondary/20 flex items-center justify-center">
               <Building2 className="h-24 w-24 text-muted-foreground" />
             </div>
@@ -49,19 +68,46 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPag
               <p className="text-muted-foreground mb-6">
                 dsvdfadffd
               </p>
-              <div className="flex items-center gap-6 mb-6">
+              <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <House className="h-5 w-5" />
                   <span>1 floors</span>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <span>2 available units</span>
+                  <Users className="h-5 w-5" />
+                  <span>2 available</span>
                 </div>
               </div>
-              <div className="border-t pt-6">
-                <p className="text-2xl font-bold text-primary">From ₱4,000/mo</p>
-              </div>
             </div>
+          </div>
+
+          <h2 className="text-2xl font-bold mb-6">Available Rooms</h2>
+          <div className="grid gap-4">
+            {rooms.map((room) => (
+              <div
+                key={room.id}
+                className="border rounded-xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              >
+                <div>
+                  <h3 className="text-xl font-semibold">{room.name}</h3>
+                  <p className="text-muted-foreground">{room.type}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{room.description}</p>
+                </div>
+                <div className="flex flex-col sm:items-end gap-2">
+                  <p className="text-xl font-bold text-primary">₱{room.price.toLocaleString()}/mo</p>
+                  {room.available > 0 ? (
+                    <div className="flex gap-2">
+                      <span className="text-sm text-green-600">{room.available} available</span>
+                      <Link href={`/contact?apartment=${id}&room=${room.id}`}>
+                        <Button>Inquire</Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <span className="text-sm text-red-600">Fully Occupied</span>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </main>

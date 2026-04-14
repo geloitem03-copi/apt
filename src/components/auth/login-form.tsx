@@ -20,18 +20,18 @@ export function LoginForm() {
     setLoading(true)
     
     try {
-      const { data, error } = await signIn(email, password)
+      const data = await signIn(email, password)
       
-      if (error) throw error
+      if (!data?.user) throw new Error('Login failed')
 
       const supabase = createClient()
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', data.user?.id)
+        .eq('id', data.user.id)
         .single()
 
-      const role = profile?.role || data.user?.user_metadata?.role || 'tenant'
+      const role = profile?.role || data.user.user_metadata?.role || 'tenant'
       
       if (role === 'landlord') {
         router.push('/landlord')

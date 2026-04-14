@@ -6,10 +6,17 @@ import { createClient } from '@/lib/supabase'
 import { useEffect, useState } from 'react'
 import { Property, Unit } from '@/types/database'
 
+interface Profile {
+  id: string
+  name: string
+  email: string
+}
+
 export default function LandlordDashboard() {
   const [properties, setProperties] = useState<Property[]>([])
   const [units, setUnits] = useState<Unit[]>([])
   const [loading, setLoading] = useState(true)
+  const [profile, setProfile] = useState<Profile | null>(null)
 
   useEffect(() => {
     async function fetchData() {
@@ -17,6 +24,15 @@ export default function LandlordDashboard() {
       
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
+
+      // Fetch profile
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+      
+      if (profileData) setProfile(profileData)
 
       const { data: props } = await supabase
         .from('properties')
@@ -47,10 +63,10 @@ export default function LandlordDashboard() {
   const totalRent = units.reduce((sum, u) => sum + Number(u.rent_amount), 0)
 
   return (
-    <DashboardLayout role="landlord">
+    <DashboardLayout role="landlord" userName={profile?.name || profile?.email}>
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold">Dashboard</h2>
+          <h2 className="text-2xl font-bold">Welcome back, {profile?.name || 'Landlord'}</h2>
           <p className="text-muted-foreground">Overview of your properties</p>
         </div>
 

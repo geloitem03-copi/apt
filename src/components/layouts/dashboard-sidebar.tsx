@@ -18,6 +18,28 @@ interface DashboardLayoutProps {
   userName?: string
 }
 
+const landlordNav: NavItem[] = [
+  { href: '/landlord', label: 'Dashboard' },
+  { href: '/landlord/properties', label: 'Properties' },
+  { href: '/landlord/units', label: 'Units' },
+  { href: '/landlord/tenants', label: 'Tenants' },
+  { href: '/landlord/inquiries', label: 'Inquiries' },
+  { href: '/landlord/payments', label: 'Payments' },
+]
+
+const tenantNav: NavItem[] = [
+  { href: '/tenant', label: 'Dashboard' },
+  { href: '/tenant/rent', label: 'My Rent' },
+  { href: '/tenant/bills', label: 'Bills' },
+  { href: '/tenant/payments', label: 'My Payments' },
+]
+
+const adminNav: NavItem[] = [
+  { href: '/admin', label: 'Dashboard' },
+  { href: '/admin/users', label: 'Users' },
+  { href: '/admin/properties', label: 'Properties' },
+]
+
 export function DashboardLayout({ children, role, userName }: DashboardLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()

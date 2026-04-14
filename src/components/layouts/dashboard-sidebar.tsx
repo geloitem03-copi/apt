@@ -22,6 +22,7 @@ const landlordNav: NavItem[] = [
   { href: '/landlord/properties', label: 'Properties' },
   { href: '/landlord/units', label: 'Units' },
   { href: '/landlord/tenants', label: 'Tenants' },
+  { href: '/landlord/inquiries', label: 'Inquiries' },
   { href: '/landlord/payments', label: 'Payments' },
 ]
 

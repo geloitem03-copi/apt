@@ -1,20 +1,8 @@
--- Drop all tables and recreate fresh
+-- First check what's in auth.users
+-- Then create tables WITHOUT touching auth
 
-DROP TABLE IF EXISTS public.inquiries CASCADE;
-DROP TABLE IF EXISTS public.units CASCADE;
-DROP TABLE IF EXISTS public.properties CASCADE;
-DROP TABLE IF EXISTS public.profiles CASCADE;
-
--- Profiles table
-CREATE TABLE public.profiles (
-  id UUID PRIMARY KEY,
-  email TEXT UNIQUE NOT NULL,
-  name TEXT,
-  role TEXT DEFAULT 'landlord'
-);
-
--- Properties table
-CREATE TABLE public.properties (
+-- Just create these tables - nothing else
+CREATE TABLE IF NOT EXISTS public.properties (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   landlord_id UUID NOT NULL,
   name TEXT NOT NULL,
@@ -23,8 +11,7 @@ CREATE TABLE public.properties (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Units table
-CREATE TABLE public.units (
+CREATE TABLE IF NOT EXISTS public.units (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   property_id UUID NOT NULL,
   unit_name TEXT NOT NULL,
@@ -34,8 +21,7 @@ CREATE TABLE public.units (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Inquiries table
-CREATE TABLE public.inquiries (
+CREATE TABLE IF NOT EXISTS public.inquiries (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   email TEXT NOT NULL,

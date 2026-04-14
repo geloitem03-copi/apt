@@ -1,8 +1,7 @@
--- First check what's in auth.users
--- Then create tables WITHOUT touching auth
+-- Fresh tables for new Supabase project
 
--- Just create these tables - nothing else
-CREATE TABLE IF NOT EXISTS public.properties (
+-- Properties table
+CREATE TABLE IF NOT EXISTS properties (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   landlord_id UUID NOT NULL,
   name TEXT NOT NULL,
@@ -11,7 +10,8 @@ CREATE TABLE IF NOT EXISTS public.properties (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS public.units (
+-- Units table
+CREATE TABLE IF NOT EXISTS units (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   property_id UUID NOT NULL,
   unit_name TEXT NOT NULL,
@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS public.units (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS public.inquiries (
+-- Inquiries table
+CREATE TABLE IF NOT EXISTS inquiries (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   email TEXT NOT NULL,

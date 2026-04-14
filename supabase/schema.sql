@@ -2,6 +2,7 @@
 -- Run this in Supabase SQL Editor
 
 -- Drop existing tables and functions (in correct order)
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 DROP TABLE IF EXISTS public.inquiries CASCADE;
 DROP TABLE IF EXISTS public.bills CASCADE;
 DROP TABLE IF EXISTS public.payments CASCADE;

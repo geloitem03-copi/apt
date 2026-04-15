@@ -13,10 +13,31 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { createClient } from '@/lib/supabase'
 import { Property, Unit } from '@/types/database'
 import { toast } from 'sonner'
 import { ArrowLeft, Plus, DoorOpen, MapPin } from 'lucide-react'
+
+const UNIT_TYPES = [
+  { value: 'studio', label: 'Studio' },
+  { value: '1bedroom', label: '1 Bedroom' },
+  { value: '2bedroom', label: '2 Bedroom' },
+  { value: '3bedroom', label: '3 Bedroom' },
+  { value: 'bedspace', label: 'Bedspace (Shared)' },
+]
+
+const FURNISHING_STATUS = [
+  { value: 'furnished', label: 'Furnished' },
+  { value: 'semi-furnished', label: 'Semi-Furnished' },
+  { value: 'unfurnished', label: 'Unfurnished' },
+]
 
 export default function PropertyDetailPage() {
   const router = useRouter()
@@ -27,10 +48,20 @@ export default function PropertyDetailPage() {
   const [units, setUnits] = useState<Unit[]>([])
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
-  const [unitName, setUnitName] = useState('')
-  const [rentAmount, setRentAmount] = useState('')
-  const [description, setDescription] = useState('')
   const [saving, setSaving] = useState(false)
+  
+  const [unitName, setUnitName] = useState('')
+  const [floorNumber, setFloorNumber] = useState('')
+  const [unitType, setUnitType] = useState<string>('')
+  const [bedroomCount, setBedroomCount] = useState('')
+  const [bathroomCount, setBathroomCount] = useState('')
+  const [areaSqm, setAreaSqm] = useState('')
+  const [rentAmount, setRentAmount] = useState('')
+  const [depositAmount, setDepositAmount] = useState('')
+  const [furnishingStatus, setFurnishingStatus] = useState<string>('')
+  const [withAc, setWithAc] = useState(false)
+  const [withOwnCr, setWithOwnCr] = useState(false)
+  const [description, setDescription] = useState('')
 
   useEffect(() => {
     fetchPropertyAndUnits()
@@ -56,6 +87,24 @@ export default function PropertyDetailPage() {
     setLoading(false)
   }
 
+  const resetUnitForm = () => {
+    setUnitName('')
+    setFloorNumber('')
+    setUnitType('')
+    setBedroomCount('')
+    setBathroomCount('')
+    setAreaSqm('')
+    setRentAmount('')
+    setDepositAmount('')
+    setFurnishingStatus('')
+    setWithAc(false)
+    setWithOwnCr(false)
+    setDescription('')
+  }
+
+  const handleUnitTypeChange = (value: string | null) => setUnitType(value || '')
+  const handleFurnishingStatusChange = (value: string | null) => setFurnishingStatus(value || '')
+
   const handleAddUnit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
@@ -65,8 +114,18 @@ export default function PropertyDetailPage() {
     const { error } = await supabase.from('units').insert({
       property_id: propertyId,
       unit_name: unitName,
-      rent_amount: Number(rentAmount),
-      description,
+      floor_number: floorNumber ? Number(floorNumber) : null,
+      unit_type: unitType as any,
+      bedroom_count: bedroomCount ? Number(bedroomCount) : null,
+      bathroom_count: bathroomCount ? Number(bathroomCount) : null,
+      area_sqm: areaSqm ? Number(areaSqm) : null,
+      rent_amount: Number(rentAmount) || 0,
+      deposit_amount: depositAmount ? Number(depositAmount) : null,
+      status: 'vacant',
+      furnishing_status: furnishingStatus as any,
+      with_ac: withAc,
+      with_own_cr: withOwnCr,
+      description: description || null,
     })
 
     if (error) {
@@ -74,9 +133,7 @@ export default function PropertyDetailPage() {
     } else {
       toast.success('Unit added!')
       setOpen(false)
-      setUnitName('')
-      setRentAmount('')
-      setDescription('')
+      resetUnitForm()
       fetchPropertyAndUnits()
     }
     setSaving(false)
@@ -105,7 +162,6 @@ export default function PropertyDetailPage() {
   return (
     <DashboardLayout role="landlord">
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.push('/landlord/properties')}>
             <ArrowLeft size={20} />
@@ -114,7 +170,7 @@ export default function PropertyDetailPage() {
             <h2 className="text-2xl font-bold">{property?.name}</h2>
             <p className="text-[#64748B] flex items-center gap-1">
               <MapPin size={14} />
-              {property?.address || 'No address'}
+              {property?.barangay}, {property?.city}, {property?.region}
             </p>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
@@ -124,13 +180,13 @@ export default function PropertyDetailPage() {
                 Add Unit
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Unit</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleAddUnit} className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Unit Name/Number</label>
+                  <label className="text-sm font-medium">Unit Name/Number *</label>
                   <Input
                     placeholder="e.g., Unit 101, Room 1A"
                     value={unitName}
@@ -138,24 +194,137 @@ export default function PropertyDetailPage() {
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Monthly Rent (₱)</label>
-                  <Input
-                    type="number"
-                    placeholder="e.g., 5000"
-                    value={rentAmount}
-                    onChange={(e) => setRentAmount(e.target.value)}
-                    required
-                  />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Floor Number</label>
+                    <Input
+                      type="number"
+                      placeholder="e.g., 1"
+                      value={floorNumber}
+                      onChange={(e) => setFloorNumber(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Unit Type</label>
+                    <Select value={unitType} onValueChange={handleUnitTypeChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {UNIT_TYPES.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Bedrooms</label>
+                    <Input
+                      type="number"
+                      placeholder="e.g., 2"
+                      value={bedroomCount}
+                      onChange={(e) => setBedroomCount(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Bathrooms</label>
+                    <Input
+                      type="number"
+                      placeholder="e.g., 1"
+                      value={bathroomCount}
+                      onChange={(e) => setBathroomCount(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Area (sqm)</label>
+                    <Input
+                      type="number"
+                      placeholder="e.g., 25"
+                      value={areaSqm}
+                      onChange={(e) => setAreaSqm(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Furnishing</label>
+                    <Select value={furnishingStatus} onValueChange={handleFurnishingStatusChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {FURNISHING_STATUS.map((status) => (
+                          <SelectItem key={status.value} value={status.value}>
+                            {status.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Monthly Rent (₱) *</label>
+                    <Input
+                      type="number"
+                      placeholder="e.g., 5000"
+                      value={rentAmount}
+                      onChange={(e) => setRentAmount(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Deposit (₱)</label>
+                    <Input
+                      type="number"
+                      placeholder="e.g., 5000"
+                      value={depositAmount}
+                      onChange={(e) => setDepositAmount(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Amenities</label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={withAc}
+                        onChange={(e) => setWithAc(e.target.checked)}
+                        className="rounded border-gray-300"
+                      />
+                      With AC
+                    </label>
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={withOwnCr}
+                        onChange={(e) => setWithOwnCr(e.target.checked)}
+                        className="rounded border-gray-300"
+                      />
+                      Own CR
+                    </label>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Description</label>
                   <Input
-                    placeholder="e.g., 2 bedroom, facing east"
+                    placeholder="Additional details..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                   />
                 </div>
+
                 <Button type="submit" className="w-full" disabled={saving}>
                   {saving ? 'Saving...' : 'Save Unit'}
                 </Button>
@@ -164,7 +333,6 @@ export default function PropertyDetailPage() {
           </Dialog>
         </div>
 
-        {/* Stats */}
         <div className="grid gap-4 md:grid-cols-3">
           <Card className="rounded-2xl shadow-sm border-[#E2E8F0]">
             <CardHeader className="pb-2">
@@ -192,7 +360,6 @@ export default function PropertyDetailPage() {
           </Card>
         </div>
 
-        {/* Units List */}
         <Card className="rounded-2xl shadow-sm border-[#E2E8F0]">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-[#0F172A] flex items-center gap-2">
@@ -212,7 +379,13 @@ export default function PropertyDetailPage() {
                   <div key={unit.id} className="flex items-center justify-between p-4 border border-[#E2E8F0] rounded-xl">
                     <div>
                       <p className="font-medium text-[#0F172A]">{unit.unit_name}</p>
-                      <p className="text-sm text-[#64748B]">{unit.description || 'No description'}</p>
+                      <p className="text-sm text-[#64748B]">
+                        {unit.unit_type?.replace('bedroom', ' BR') || 'N/A'} | 
+                        Floor {unit.floor_number || 'N/A'} | 
+                        {unit.area_sqm ? ` ${unit.area_sqm}m²` : ''}
+                        {unit.with_ac && ' | AC'}
+                        {unit.with_own_cr && ' | Private CR'}
+                      </p>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">

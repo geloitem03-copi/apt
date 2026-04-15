@@ -100,7 +100,7 @@ export default function PropertiesPage() {
             <p className="text-[#64748B]">Manage your properties</p>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+            <DialogTrigger>
               <Button>
                 <Plus size={18} className="mr-2" />
                 Add Property

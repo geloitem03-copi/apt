@@ -22,6 +22,7 @@ export interface Unit {
   unit_name: string
   rent_amount: number
   status: 'occupied' | 'vacant'
+  description: string | null
   created_at: string
 }
 

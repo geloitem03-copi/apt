@@ -1,7 +1,6 @@
 'use client'
 
 import { createClient } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
 import { UserRole } from '@/types/database'
 
 export async function signUp(email: string, password: string, name: string, role: UserRole) {
@@ -11,6 +10,7 @@ export async function signUp(email: string, password: string, name: string, role
     email,
     password,
     options: {
+      emailRedirectTo: `${window.location.origin}/auth/callback`,
       data: {
         name,
         role,

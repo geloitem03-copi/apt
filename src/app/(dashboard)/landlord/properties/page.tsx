@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { DashboardLayout } from '@/components/layouts/dashboard-sidebar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,11 +14,13 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { createClient } from '@/lib/supabase'
-import { Property } from '@/types/database'
+import { Property, Unit } from '@/types/database'
 import { toast } from 'sonner'
+import { Building2, MapPin, ArrowRight, Plus } from 'lucide-react'
 
 export default function PropertiesPage() {
-  const [properties, setProperties] = useState<Property[]>([])
+  const router = useRouter()
+  const [properties, setProperties] = useState<(Property & { units?: Unit[] })[]>([])
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
@@ -38,7 +41,18 @@ export default function PropertiesPage() {
       .select('*')
       .eq('landlord_id', user.id)
 
-    if (data) setProperties(data)
+    if (data) {
+      const propertiesWithUnits = await Promise.all(
+        data.map(async (property) => {
+          const { data: units } = await supabase
+            .from('units')
+            .select('*')
+            .eq('property_id', property.id)
+          return { ...property, units: units || [] }
+        })
+      )
+      setProperties(propertiesWithUnits)
+    }
     setLoading(false)
   }
 
@@ -69,7 +83,7 @@ export default function PropertiesPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this property?')) return
+    if (!confirm('Delete this property and all its units?')) return
 
     const supabase = createClient()
     await supabase.from('properties').delete().eq('id', id)
@@ -83,11 +97,14 @@ export default function PropertiesPage() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold">Properties</h2>
-            <p className="text-muted-foreground">Manage your properties</p>
+            <p className="text-[#64748B]">Manage your properties</p>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger>
-              <Button>Add Property</Button>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus size={18} className="mr-2" />
+                Add Property
+              </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -119,27 +136,46 @@ export default function PropertiesPage() {
           </Dialog>
         </div>
 
-        <Card>
+        <Card className="rounded-2xl shadow-sm border-[#E2E8F0]">
           <CardHeader>
-            <CardTitle>All Properties</CardTitle>
+            <CardTitle className="text-lg font-semibold text-[#0F172A]">All Properties</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
               <p>Loading...</p>
             ) : properties.length === 0 ? (
-              <p className="text-muted-foreground">No properties yet. Add your first property!</p>
+              <div className="text-center py-8">
+                <Building2 className="h-12 w-12 text-[#64748B] mx-auto mb-3" />
+                <p className="text-[#64748B]">No properties yet. Add your first property!</p>
+              </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {properties.map((property) => (
-                  <div key={property.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <p className="font-medium">{property.name}</p>
-                      <p className="text-sm text-muted-foreground">{property.address}</p>
+                  <div 
+                    key={property.id} 
+                    className="flex items-center justify-between p-4 border border-[#E2E8F0] rounded-xl hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => router.push(`/landlord/properties/${property.id}`)}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 bg-[#4F46E5]/10 rounded-lg flex items-center justify-center">
+                        <Building2 className="h-6 w-6 text-[#4F46E5]" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-[#0F172A]">{property.name}</p>
+                        <p className="text-sm text-[#64748B] flex items-center gap-1">
+                          <MapPin size={12} />
+                          {property.address || 'No address'}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleDelete(property.id)}>
-                        Delete
-                      </Button>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="text-sm text-[#64748B]">{property.units?.length || 0} units</p>
+                        <p className="text-sm font-medium text-[#0F172A]">
+                          ₱{property.units?.reduce((sum, u) => sum + Number(u.rent_amount), 0).toLocaleString() || 0}/mo
+                        </p>
+                      </div>
+                      <ArrowRight className="h-5 w-5 text-[#64748B]" />
                     </div>
                   </div>
                 ))}

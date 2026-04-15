@@ -25,21 +25,30 @@ export interface Property {
   created_at: string
 }
 
+export interface PropertyPolicy {
+  id: string
+  property_id: string
+  security_deposit_months: number
+  advance_payment_months: number
+  created_at: string
+}
+
 export interface Unit {
   id: string
   property_id: string
   unit_name: string
-  floor_number: number
-  unit_type: 'studio' | '1bedroom' | '2bedroom' | '3bedroom' | 'bedspace'
-  bedroom_count: number
-  bathroom_count: number
-  area_sqm: number
+  floor_number: number | null
+  unit_type: 'studio' | 'room' | 'bedspace'
+  number_of_rooms: number | null
+  bathroom_count: number | null
+  area_sqm: number | null
   rent_amount: number
-  deposit_amount: number
   status: 'occupied' | 'vacant'
-  furnishing_status: 'furnished' | 'semi-furnished' | 'unfurnished'
+  furnishing_status: 'furnished' | 'semi-furnished' | 'unfurnished' | null
   with_ac: boolean
   with_own_cr: boolean
+  security_deposit_override: number | null
+  advance_payment_override: number | null
   description: string | null
   created_at: string
 }

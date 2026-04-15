@@ -27,9 +27,7 @@ import { ArrowLeft, Plus, DoorOpen, MapPin } from 'lucide-react'
 
 const UNIT_TYPES = [
   { value: 'studio', label: 'Studio' },
-  { value: '1bedroom', label: '1 Bedroom' },
-  { value: '2bedroom', label: '2 Bedroom' },
-  { value: '3bedroom', label: '3 Bedroom' },
+  { value: 'room', label: 'Private Room' },
   { value: 'bedspace', label: 'Bedspace (Shared)' },
 ]
 
@@ -53,14 +51,15 @@ export default function PropertyDetailPage() {
   const [unitName, setUnitName] = useState('')
   const [floorNumber, setFloorNumber] = useState('')
   const [unitType, setUnitType] = useState<string>('')
-  const [bedroomCount, setBedroomCount] = useState('')
+  const [numberOfRooms, setNumberOfRooms] = useState('')
   const [bathroomCount, setBathroomCount] = useState('')
   const [areaSqm, setAreaSqm] = useState('')
   const [rentAmount, setRentAmount] = useState('')
-  const [depositAmount, setDepositAmount] = useState('')
   const [furnishingStatus, setFurnishingStatus] = useState<string>('')
   const [withAc, setWithAc] = useState(false)
   const [withOwnCr, setWithOwnCr] = useState(false)
+  const [securityDepositOverride, setSecurityDepositOverride] = useState('')
+  const [advancePaymentOverride, setAdvancePaymentOverride] = useState('')
   const [description, setDescription] = useState('')
 
   useEffect(() => {
@@ -91,18 +90,24 @@ export default function PropertyDetailPage() {
     setUnitName('')
     setFloorNumber('')
     setUnitType('')
-    setBedroomCount('')
+    setNumberOfRooms('')
     setBathroomCount('')
     setAreaSqm('')
     setRentAmount('')
-    setDepositAmount('')
     setFurnishingStatus('')
     setWithAc(false)
     setWithOwnCr(false)
+    setSecurityDepositOverride('')
+    setAdvancePaymentOverride('')
     setDescription('')
   }
 
-  const handleUnitTypeChange = (value: string | null) => setUnitType(value || '')
+  const handleUnitTypeChange = (value: string | null) => {
+    setUnitType(value || '')
+    if (value !== 'room') {
+      setNumberOfRooms('')
+    }
+  }
   const handleFurnishingStatusChange = (value: string | null) => setFurnishingStatus(value || '')
 
   const handleAddUnit = async (e: React.FormEvent) => {
@@ -116,15 +121,16 @@ export default function PropertyDetailPage() {
       unit_name: unitName,
       floor_number: floorNumber ? Number(floorNumber) : null,
       unit_type: unitType as any,
-      bedroom_count: bedroomCount ? Number(bedroomCount) : null,
+      number_of_rooms: unitType === 'room' && numberOfRooms ? Number(numberOfRooms) : null,
       bathroom_count: bathroomCount ? Number(bathroomCount) : null,
       area_sqm: areaSqm ? Number(areaSqm) : null,
       rent_amount: Number(rentAmount) || 0,
-      deposit_amount: depositAmount ? Number(depositAmount) : null,
       status: 'vacant',
       furnishing_status: furnishingStatus as any,
       with_ac: withAc,
       with_own_cr: withOwnCr,
+      security_deposit_override: securityDepositOverride ? Number(securityDepositOverride) : null,
+      advance_payment_override: advancePaymentOverride ? Number(advancePaymentOverride) : null,
       description: description || null,
     })
 
@@ -159,6 +165,8 @@ export default function PropertyDetailPage() {
     )
   }
 
+  const showNumberOfRooms = unitType === 'room'
+
   return (
     <DashboardLayout role="landlord">
       <div className="space-y-6">
@@ -180,7 +188,7 @@ export default function PropertyDetailPage() {
                 Add Unit
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Unit</DialogTitle>
               </DialogHeader>
@@ -206,10 +214,10 @@ export default function PropertyDetailPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Unit Type</label>
-                    <Select value={unitType} onValueChange={handleUnitTypeChange}>
+                    <label className="text-sm font-medium">Unit Type *</label>
+                    <Select value={unitType} onValueChange={handleUnitTypeChange} required>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select" />
+                        <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent>
                         {UNIT_TYPES.map((type) => (
@@ -222,16 +230,20 @@ export default function PropertyDetailPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                {showNumberOfRooms && (
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Bedrooms</label>
+                    <label className="text-sm font-medium">Number of Rooms *</label>
                     <Input
                       type="number"
                       placeholder="e.g., 2"
-                      value={bedroomCount}
-                      onChange={(e) => setBedroomCount(e.target.value)}
+                      value={numberOfRooms}
+                      onChange={(e) => setNumberOfRooms(e.target.value)}
+                      required
                     />
                   </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Bathrooms</label>
                     <Input
@@ -241,9 +253,6 @@ export default function PropertyDetailPage() {
                       onChange={(e) => setBathroomCount(e.target.value)}
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Area (sqm)</label>
                     <Input
@@ -251,6 +260,19 @@ export default function PropertyDetailPage() {
                       placeholder="e.g., 25"
                       value={areaSqm}
                       onChange={(e) => setAreaSqm(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Monthly Rent (₱) *</label>
+                    <Input
+                      type="number"
+                      placeholder="e.g., 5000"
+                      value={rentAmount}
+                      onChange={(e) => setRentAmount(e.target.value)}
+                      required
                     />
                   </div>
                   <div className="space-y-2">
@@ -267,28 +289,6 @@ export default function PropertyDetailPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Monthly Rent (₱) *</label>
-                    <Input
-                      type="number"
-                      placeholder="e.g., 5000"
-                      value={rentAmount}
-                      onChange={(e) => setRentAmount(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Deposit (₱)</label>
-                    <Input
-                      type="number"
-                      placeholder="e.g., 5000"
-                      value={depositAmount}
-                      onChange={(e) => setDepositAmount(e.target.value)}
-                    />
                   </div>
                 </div>
 
@@ -313,6 +313,31 @@ export default function PropertyDetailPage() {
                       />
                       Own CR
                     </label>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <p className="text-sm font-medium text-[#64748B] mb-3">Override Payment Settings (Optional)</p>
+                  <p className="text-xs text-[#64748B] mb-3">Leave empty to use property defaults</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Security Deposit (₱)</label>
+                      <Input
+                        type="number"
+                        placeholder="Override deposit"
+                        value={securityDepositOverride}
+                        onChange={(e) => setSecurityDepositOverride(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Advance Payment (₱)</label>
+                      <Input
+                        type="number"
+                        placeholder="Override advance"
+                        value={advancePaymentOverride}
+                        onChange={(e) => setAdvancePaymentOverride(e.target.value)}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -380,7 +405,9 @@ export default function PropertyDetailPage() {
                     <div>
                       <p className="font-medium text-[#0F172A]">{unit.unit_name}</p>
                       <p className="text-sm text-[#64748B]">
-                        {unit.unit_type?.replace('bedroom', ' BR') || 'N/A'} | 
+                        {unit.unit_type === 'studio' ? 'Studio' : 
+                         unit.unit_type === 'room' ? `${unit.number_of_rooms || 'N/A'} Private Room` : 
+                         'Bedspace'} | 
                         Floor {unit.floor_number || 'N/A'} | 
                         {unit.area_sqm ? ` ${unit.area_sqm}m²` : ''}
                         {unit.with_ac && ' | AC'}

@@ -118,7 +118,7 @@ export default function PropertyDetailPage() {
             </p>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+            <DialogTrigger>
               <Button>
                 <Plus size={18} className="mr-2" />
                 Add Unit
